@@ -1,6 +1,6 @@
 # AeroGro Nutrient Architect
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/studyand1/AeroGro-Nutrient-Architect-HPA-)
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/studyand1/AeroGro-Nutrient-Architect-HPA)
 
 A minimalist, client-side tool to configure, calculate, and manage nutrient solutions for HPA aeroponic leafy greens.
 
