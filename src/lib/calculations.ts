@@ -104,3 +104,88 @@ export const getDecisionHelperAdvice = (
     action: 'Monitor and maintain current levels. No immediate action required.',
   };
 };
+
+/**
+ * Calculates the required amount of A/B fertilizer to reach a target EC,
+ * considering the initial EC of the water.
+ * @param totalVolumeL - The total volume of the solution in liters.
+ * @param targetEC - The target electrical conductivity in ms/cm.
+ * @param initialEC - The initial electrical conductivity of the water in ms/cm.
+ * @param ecContributionPerGram - The EC contribution per gram of A/B fertilizer per liter of water (in ms/cm).
+ * @returns The total grams of A/B fertilizer required (A and B combined).
+ */
+export function calculatePreciseDosing(
+  totalVolumeL: number,
+  targetEC: number,
+  initialEC: number,
+  ecContributionPerGram: number = 0.466
+): number {
+  if (targetEC <= initialEC || totalVolumeL <= 0) {
+    return 0;
+  }
+
+  const requiredECIncrease = targetEC - initialEC;
+  const gramsPerLiter = requiredECIncrease / ecContributionPerGram;
+  const totalGrams = gramsPerLiter * totalVolumeL;
+
+  return parseFloat(totalGrams.toFixed(2));
+}
+
+export interface TopUpResult {
+  waterToAdd: number;
+  fertilizerToAdd: number;
+}
+
+/**
+ * Calculates the water and fertilizer needed to top up an existing nutrient solution to a target volume and EC.
+ * @param currentVolumeL - The current volume of the nutrient solution in liters.
+ * @param currentEC - The current EC of the nutrient solution in ms/cm.
+ * @param targetVolumeL - The target volume of the solution in liters.
+ * @param targetEC - The target EC of the solution in ms/cm.
+ * @param waterEC - The EC of the water being used for topping up in ms/cm.
+ * @param ecContributionPerGram - The EC contribution per gram of A/B fertilizer per liter of water (in ms/cm).
+ * @returns An object containing the amount of water and total A/B fertilizer to add.
+ */
+export function calculateTopUpDosing(
+  currentVolumeL: number,
+  currentEC: number,
+  targetVolumeL: number,
+  targetEC: number,
+  waterEC: number,
+  ecContributionPerGram: number = 0.466
+): TopUpResult {
+  if (targetVolumeL <= currentVolumeL) {
+    return { waterToAdd: 0, fertilizerToAdd: 0 }; // Cannot top up to a smaller or equal volume
+  }
+
+  // Step 1: Calculate the total "EC units" from fertilizer in the current solution.
+  // Total EC units = V * EC. We subtract the water's contribution to isolate the fertilizer's contribution.
+  const fertilizerEC_in_current = currentEC - waterEC;
+  const fertilizerUnits_in_current = fertilizerEC_in_current * currentVolumeL;
+
+  // Step 2: Calculate the total "EC units" required from fertilizer in the target solution.
+  const fertilizerEC_in_target = targetEC - waterEC;
+  const fertilizerUnits_in_target = fertilizerEC_in_target * targetVolumeL;
+
+  // Step 3: Calculate the additional "EC units" needed from new fertilizer.
+  const requiredFertilizerUnits = fertilizerUnits_in_target - fertilizerUnits_in_current;
+
+  if (requiredFertilizerUnits <= 0) {
+    // This means the diluted solution will already be at or above the target EC.
+    // No fertilizer is needed, only water.
+    return {
+      waterToAdd: parseFloat((targetVolumeL - currentVolumeL).toFixed(2)),
+      fertilizerToAdd: 0,
+    };
+  }
+
+  // Step 4: Convert the required "EC units" back to grams of fertilizer.
+  // Required Units = (grams / targetVolumeL) * ecContributionPerGram * targetVolumeL
+  // Required Units = grams * ecContributionPerGram
+  const fertilizerToAdd = requiredFertilizerUnits / ecContributionPerGram;
+
+  return {
+    waterToAdd: parseFloat((targetVolumeL - currentVolumeL).toFixed(2)),
+    fertilizerToAdd: parseFloat(fertilizerToAdd.toFixed(2)),
+  };
+}
