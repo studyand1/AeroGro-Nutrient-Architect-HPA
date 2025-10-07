@@ -15,6 +15,7 @@ interface PreciseDosingState {
   targetVolume: number;
   targetEC: number;
   waterEC: number;
+  ecContributionPerGram: number;
 }
 
 interface PreciseResult {
@@ -35,6 +36,7 @@ export function DosingCalculator() {
     targetVolume: 17,
     targetEC: 1.6, // Default for vegetative stage
     waterEC: 0.086,
+    ecContributionPerGram: 0.4823,
   });
   const [preciseResult, setPreciseResult] = useState<PreciseResult | null>(null);
 
@@ -48,11 +50,11 @@ export function DosingCalculator() {
   };
 
   const handlePreciseCalculate = () => {
-    const { currentEC, currentVolume, targetVolume, targetEC, waterEC } = preciseState;
+    const { currentEC, currentVolume, targetVolume, targetEC, waterEC, ecContributionPerGram } = preciseState;
 
     // Scenario 1: First time setup (currentVolume is 0 or less)
     if (currentVolume <= 0) {
-      const totalFertilizer = calculatePreciseDosing(targetVolume, targetEC, waterEC);
+      const totalFertilizer = calculatePreciseDosing(targetVolume, targetEC, waterEC, ecContributionPerGram);
       const fertilizerA = totalFertilizer / 2;
       const fertilizerB = totalFertilizer / 2;
       setPreciseResult({
@@ -68,7 +70,8 @@ export function DosingCalculator() {
         currentEC,
         targetVolume,
         targetEC,
-        waterEC
+        waterEC,
+        ecContributionPerGram
       );
 
       const fertilizerA = fertilizerToAdd / 2;
@@ -152,10 +155,16 @@ export function DosingCalculator() {
                 <Input id="target-ec" type="number" value={preciseState.targetEC} onChange={e => handlePreciseInputChange('targetEC', e.target.value)} placeholder="e.g., 1.6" />
               </div>
             </div>
-             <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
                 <Label htmlFor="water-ec">Top-up Water EC (mS/cm)</Label>
                 <Input id="water-ec" type="number" value={preciseState.waterEC} onChange={e => handlePreciseInputChange('waterEC', e.target.value)} placeholder="e.g., 0.086" />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="ec-contribution">Fertilizer EC Factor (mS/cm/g/L)</Label>
+                <Input id="ec-contribution" type="number" value={preciseState.ecContributionPerGram} onChange={e => handlePreciseInputChange('ecContributionPerGram', e.target.value)} placeholder="e.g., 0.466" />
+              </div>
+            </div>
             <div className="flex items-end gap-4">
               <div className="space-y-2 flex-1">
                 <Label htmlFor="current-volume">Current Volume (L)</Label>
